@@ -166,3 +166,11 @@ The Random Forest model gave the best result with an accuracy of approximately 8
 - rpart
 - rpart.plot
 - randomForest
+
+## Files in This Repository
+
+- `Customer_Churn_Project.Rmd` - R Markdown file containing the full code and analysis
+- `Customer_Churn_Project.docx` - Final knitted project report
+- `CustomerChurn.csv` - Dataset used for the project
+- `images/` - Folder containing project visualizations
+- `README.md` - Portfolio summary
