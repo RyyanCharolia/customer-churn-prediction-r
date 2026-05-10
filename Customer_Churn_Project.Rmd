@@ -1,0 +1,142 @@
+---
+title: "Customer_Churn_Project"
+output:
+  word_document: default
+  html_document: default
+date: "2026-03-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(rpart)
+library(rpart.plot)
+library(caret)
+library(randomForest)
+```
+
+
+```{r}
+list.files()
+unzip("archive.zip",list=TRUE)
+df <-read.csv("CustomerChurn.csv")
+View(df)
+```
+
+```{r}
+dim(df)
+colnames(df)
+str(df)
+summary(df)
+sum(is.na(df))
+```
+```{r}
+churn_df <- df[,c("CreditScore", "Geography", "Gender", "Age",
+                       "Tenure", "Balance", "NumOfProducts",
+                       "HasCrCard", "IsActiveMember",
+                       "EstimatedSalary", "Card.Type",
+                       "Point.Earned", "Exited")]
+
+View(churn_df)
+
+```
+
+
+```{r}
+ggplot(churn_df,aes(x=factor(Exited)))+
+  geom_bar()+
+  labs(title="Customer Churn Count",
+       x="Exited",
+       y="Count")
+```
+```{r}
+ggplot(churn_df,aes(x=Geography,fill=factor(Exited)))+
+  geom_bar(position = "dodge")+
+  labs(title = "Geography vs Churn",
+       x="Geography",
+       y="Churn",
+       fill="Exited")
+```
+```{r}
+ggplot(churn_df,aes(x=factor(IsActiveMember),fill=factor(Exited)))+
+  geom_bar()
+```
+
+```{r}
+ggplot(churn_df,aes(x=factor(Exited),y=Age))+
+  geom_boxplot()
+```
+```{r}
+ggplot(churn_df, aes(x = factor(Exited), y = Balance)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(churn_df,aes(x=factor(NumOfProducts),fill=factor(Exited)))+
+  geom_bar(position="dodge")
+```
+
+```{r}
+ggplot(churn_df,aes(x=factor(Gender),fill = factor(Exited)))+
+  geom_bar(position = "dodge")
+```
+```{r}
+churn_df$Geography <- as.factor(churn_df$Geography)
+churn_df$Gender <- as.factor(churn_df$Gender)
+churn_df$Card.Type <- as.factor(churn_df$Card.Type)
+churn_df$HasCrCard <- as.factor(churn_df$HasCrCard)
+churn_df$IsActiveMember <- as.factor(churn_df$IsActiveMember)
+churn_df$Exited <- as.factor(churn_df$Exited)
+```
+
+```{r}
+log_model <- glm(Exited ~.,data=churn_df,family="binomial")
+summary(log_model)
+
+prob<- predict(log_model,type="response")
+head(prob)
+
+class_pred <- ifelse(prob>0.5,1,0)
+head(class_pred)
+
+actual <- as.numeric(as.character(churn_df$Exited))
+table(Predicted = class_pred, Actual = actual)
+mean(class_pred == actual)
+```
+
+```{r}
+
+set.seed(123)
+
+train_index <- createDataPartition(churn_df$Exited,p=0.7,list= FALSE)
+
+train_data <- churn_df[train_index,]
+test_data <- churn_df[-train_index,]
+
+tree_model <- rpart(Exited ~.,data= train_data,method= "class")
+rpart.plot(tree_model)
+```
+
+
+
+```{r}
+tree_pred <- predict(tree_model,newdata= test_data,type="class")
+confusionMatrix(tree_pred,test_data$Exited)
+```
+
+
+```{r}
+rf_model <-  randomForest(Exited ~.,data= train_data,ntree=500)
+rf_model
+rf_pred <- predict(rf_model, newdata = test_data)
+confusionMatrix(rf_pred, test_data$Exited)
+
+importance(rf_model)
+varImpPlot(rf_model)
+```
+
+
+
